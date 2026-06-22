@@ -52,10 +52,14 @@
     "qualified": false
   },
   "7939328718": {
-    "invites": 1,
+    "invites": 2,
     "qualified": false
   },
   "6869142743": {
+    "invited_by": 7939328718,
+    "qualified": false
+  },
+  "6728579085": {
     "invited_by": 7939328718,
     "qualified": false
   }
