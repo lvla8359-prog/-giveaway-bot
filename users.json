@@ -1,0 +1,62 @@
+{
+  "6790082593": {
+    "invites": 1,
+    "qualified": false
+  },
+  "8057590374": {
+    "invited_by": 6790082593,
+    "qualified": false
+  },
+  "8588107772": {
+    "invites": 2,
+    "qualified": false
+  },
+  "5289454130": {
+    "invited_by": 8588107772,
+    "qualified": false
+  },
+  "8245704613": {
+    "invited_by": 8588107772,
+    "qualified": false
+  },
+  "8088356935": {
+    "invites": 3,
+    "qualified": true
+  },
+  "1452676304": {
+    "invited_by": 8088356935,
+    "qualified": false
+  },
+  "5258281246": {
+    "invited_by": 8088356935,
+    "qualified": false
+  },
+  "5036738486": {
+    "invited_by": 8088356935,
+    "qualified": false
+  },
+  "6566168981": {
+    "invites": 3,
+    "qualified": true
+  },
+  "2121923594": {
+    "invited_by": 6566168981,
+    "qualified": false
+  },
+  "7820748009": {
+    "invited_by": 6566168981,
+    "qualified": false
+  },
+  "8022432625": {
+    "invited_by": 6566168981,
+    "qualified": false
+  },
+  "7939328718": {
+    "invites": 1,
+    "qualified": false
+  },
+  "6869142743": {
+    "invited_by": 7939328718,
+    "qualified": false
+  }
+}
