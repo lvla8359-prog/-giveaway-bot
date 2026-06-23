@@ -5,7 +5,8 @@ from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.enums import ChatMemberStatus
 
-BOT_TOKEN = "8634401356:AAFDAAFnGP0AOcqDNCaRT54itK9M5L680PQ"
+import os
+BOT_TOKEN = "8634401356:AAGxWBGEsn2xprjq2oAL81i7VEj5fxJ0McA"
 CHANNEL_ID = "@CentralPodBarnaul"
 ADMIN_ID = 8293301430
 
@@ -100,14 +101,73 @@ async def draw_winner(message: types.Message):
     if message.from_user.id != ADMIN_ID:
         await message.answer("⛔️ Доступно только администратору.")
         return
+
     data = await load_data()
-    qualified = [uid for uid, info in data.items() if info.get("qualified", False)]
+
+    if data.get("_draw", {}).get("done"):
+        winner_id = data["_draw"]["winner_id"]
+        await message.answer(
+            f"⚠️ Розыгрыш уже был проведён ранее (победитель ID: {winner_id}).\n"
+            f"Если хотите провести заново — используйте /resetdraw."
+        )
+        return
+
+    qualified = [uid for uid, info in data.items() if not uid.startswith("_") and info.get("qualified", False)]
     if not qualified:
         await message.answer("❌ Нет участников, выполнивших условия.")
         return
+
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="✅ Да, выбрать победителя", callback_data="confirm_draw")],
+        [InlineKeyboardButton(text="❌ Отмена", callback_data="cancel_draw")]
+    ])
+    await message.answer(
+        f"❓ Подтвердите розыгрыш.\n"
+        f"Участников с выполненными условиями: {len(qualified)}.\n"
+        f"После подтверждения победитель будет выбран и уведомлён.",
+        reply_markup=kb
+    )
+
+@dp.callback_query(lambda c: c.data == "cancel_draw")
+async def cancel_draw(callback: types.CallbackQuery):
+    if callback.from_user.id != ADMIN_ID:
+        await callback.answer("⛔️ Доступно только администратору.", show_alert=True)
+        return
+    await callback.message.edit_text("🚫 Розыгрыш отменён.")
+
+@dp.callback_query(lambda c: c.data == "confirm_draw")
+async def confirm_draw(callback: types.CallbackQuery):
+    if callback.from_user.id != ADMIN_ID:
+        await callback.answer("⛔️ Доступно только администратору.", show_alert=True)
+        return
+
+    data = await load_data()
+
+    if data.get("_draw", {}).get("done"):
+        await callback.message.edit_text("⚠️ Розыгрыш уже был проведён ранее.")
+        return
+
+    qualified = [uid for uid, info in data.items() if not uid.startswith("_") and info.get("qualified", False)]
+    if not qualified:
+        await callback.message.edit_text("❌ Нет участников, выполнивших условия.")
+        return
+
     winner_id = random.choice(qualified)
+    data["_draw"] = {"done": True, "winner_id": int(winner_id)}
+    await save_data(data)
+
     await bot.send_message(winner_id, "🏆 Вы выиграли розыгрыш! Напишите администратору @admin_username")
-    await message.answer(f"✅ Победитель выбран! (ID: {winner_id})")
+    await callback.message.edit_text(f"✅ Победитель выбран! (ID: {winner_id})")
+
+@dp.message(Command("resetdraw"))
+async def reset_draw(message: types.Message):
+    if message.from_user.id != ADMIN_ID:
+        await message.answer("⛔️ Доступно только администратору.")
+        return
+    data = await load_data()
+    data.pop("_draw", None)
+    await save_data(data)
+    await message.answer("♻️ Статус розыгрыша сброшен. Можно проводить заново через /draw.")
 
 async def main():
     await dp.start_polling(bot)
