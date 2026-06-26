@@ -6,7 +6,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.enums import ChatMemberStatus
  
 BOT_TOKEN = "8634401356:AAGxWBGEsn2xprjq2oAL81i7VEj5fxJ0McA"
-CHANNEL_ID = "@CentralPodBarnaull"
+CHANNEL_ID = "@CentralPodBarnaul"
 ADMIN_ID = 8293301430
  
 bot = Bot(token=BOT_TOKEN)
