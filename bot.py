@@ -4,41 +4,40 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.enums import ChatMemberStatus
-
-import os
+ 
 BOT_TOKEN = "8634401356:AAGxWBGEsn2xprjq2oAL81i7VEj5fxJ0McA"
-CHANNEL_ID = "@CentralPodBarnaul"
+CHANNEL_ID = "@CentralPodBaruall"
 ADMIN_ID = 8293301430
-
+ 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 DATA_FILE = "users.json"
-
+ 
 async def load_data():
     try:
         async with aiofiles.open(DATA_FILE, "r", encoding="utf-8") as f:
             return json.loads(await f.read())
     except:
         return {}
-
+ 
 async def save_data(data):
     async with aiofiles.open(DATA_FILE, "w", encoding="utf-8") as f:
         await f.write(json.dumps(data, indent=2, ensure_ascii=False))
-
+ 
 async def is_subscribed(user_id):
     try:
         member = await bot.get_chat_member(chat_id=CHANNEL_ID, user_id=user_id)
         return member.status in [ChatMemberStatus.MEMBER, ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.CREATOR]
     except:
         return False
-
+ 
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
     user_id = message.from_user.id
     args = message.text.split()
     data = await load_data()
     bot_info = await bot.get_me()
-
+ 
     if len(args) >= 2 and args[1].startswith("ref_"):
         referrer_id = int(args[1].replace("ref_", ""))
         if referrer_id == user_id:
@@ -63,11 +62,11 @@ async def cmd_start(message: types.Message):
         await save_data(data)
         await message.answer("✅ Вы засчитаны как приглашённый!")
         return
-
+ 
     if str(user_id) in data and data[str(user_id)].get("qualified", False):
         await message.answer("✅ Вы уже участвуете в розыгрыше! Ждите результатов.")
         return
-
+ 
     if not await is_subscribed(user_id):
         kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="📢 Подписаться на канал", url=f"https://t.me/{CHANNEL_ID[1:]}")],
@@ -79,7 +78,7 @@ async def cmd_start(message: types.Message):
             reply_markup=kb
         )
         return
-
+ 
     ref_link = f"https://t.me/{bot_info.username}?start=ref_{user_id}"
     invites = data.get(str(user_id), {}).get("invites", 0)
     await message.answer(
@@ -88,77 +87,28 @@ async def cmd_start(message: types.Message):
         f"👥 Пригласите 3 друзей (каждый должен подписаться на канал).\n"
         f"Прогресс: {invites} / 3"
     )
-
+ 
 @dp.callback_query(lambda c: c.data == "check_sub")
 async def check_sub(callback: types.CallbackQuery):
     if await is_subscribed(callback.from_user.id):
         await callback.message.edit_text("✅ Подписка подтверждена! Используйте /start для получения ссылки.")
     else:
         await callback.answer("❌ Вы ещё не подписаны!", show_alert=True)
-
+ 
 @dp.message(Command("draw"))
 async def draw_winner(message: types.Message):
     if message.from_user.id != ADMIN_ID:
         await message.answer("⛔️ Доступно только администратору.")
         return
-
     data = await load_data()
-
-    if data.get("_draw", {}).get("done"):
-        winner_id = data["_draw"]["winner_id"]
-        await message.answer(
-            f"⚠️ Розыгрыш уже был проведён ранее (победитель ID: {winner_id}).\n"
-            f"Если хотите провести заново — используйте /resetdraw."
-        )
-        return
-
-    qualified = [uid for uid, info in data.items() if not uid.startswith("_") and info.get("qualified", False)]
+    qualified = [uid for uid, info in data.items() if info.get("qualified", False)]
     if not qualified:
         await message.answer("❌ Нет участников, выполнивших условия.")
         return
-
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="✅ Да, выбрать победителя", callback_data="confirm_draw")],
-        [InlineKeyboardButton(text="❌ Отмена", callback_data="cancel_draw")]
-    ])
-    await message.answer(
-        f"❓ Подтвердите розыгрыш.\n"
-        f"Участников с выполненными условиями: {len(qualified)}.\n"
-        f"После подтверждения победитель будет выбран и уведомлён.",
-        reply_markup=kb
-    )
-
-@dp.callback_query(lambda c: c.data == "cancel_draw")
-async def cancel_draw(callback: types.CallbackQuery):
-    if callback.from_user.id != ADMIN_ID:
-        await callback.answer("⛔️ Доступно только администратору.", show_alert=True)
-        return
-    await callback.message.edit_text("🚫 Розыгрыш отменён.")
-
-@dp.callback_query(lambda c: c.data == "confirm_draw")
-async def confirm_draw(callback: types.CallbackQuery):
-    if callback.from_user.id != ADMIN_ID:
-        await callback.answer("⛔️ Доступно только администратору.", show_alert=True)
-        return
-
-    data = await load_data()
-
-    if data.get("_draw", {}).get("done"):
-        await callback.message.edit_text("⚠️ Розыгрыш уже был проведён ранее.")
-        return
-
-    qualified = [uid for uid, info in data.items() if not uid.startswith("_") and info.get("qualified", False)]
-    if not qualified:
-        await callback.message.edit_text("❌ Нет участников, выполнивших условия.")
-        return
-
     winner_id = random.choice(qualified)
-    data["_draw"] = {"done": True, "winner_id": int(winner_id)}
-    await save_data(data)
-
     await bot.send_message(winner_id, "🏆 Вы выиграли розыгрыш! Напишите администратору @admin_username")
-    await callback.message.edit_text(f"✅ Победитель выбран! (ID: {winner_id})")
-
+    await message.answer(f"✅ Победитель выбран! (ID: {winner_id})")
+ 
 @dp.message(Command("resetdraw"))
 async def reset_draw(message: types.Message):
     if message.from_user.id != ADMIN_ID:
@@ -168,9 +118,10 @@ async def reset_draw(message: types.Message):
     data.pop("_draw", None)
     await save_data(data)
     await message.answer("♻️ Статус розыгрыша сброшен. Можно проводить заново через /draw.")
-
+ 
 async def main():
+    await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
-
+ 
 if __name__ == "__main__":
     asyncio.run(main())
