@@ -5,7 +5,7 @@ from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.enums import ChatMemberStatus
 
-BOT_TOKEN = "8634401356:AAFDAAFnGP0AOcqDNCaRT54itK9M5L680PQ"
+BOT_TOKEN = "8634401356:AAEg0axwU9m7qPyzJmkPDA5B2KF60Qz3_Ow"
 CHANNEL_ID = "@CentralPodBarnaul"
 ADMIN_ID = 8293301430
 
